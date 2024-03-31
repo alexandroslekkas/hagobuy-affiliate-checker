@@ -56,7 +56,7 @@ The script logs into HagoBuy, navigates to the affiliate center, extracts statis
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to check the [issues page](https://your-repo-link/issues) for existing or add new ones.
+Contributions are welcome!
 
 ## 📝 License
 
