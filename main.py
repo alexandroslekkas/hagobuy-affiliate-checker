@@ -46,6 +46,8 @@ def main():
         else:
             print("[>] First run")
 
+            now = datetime.now()
+
             notification_message = """
             ⬇️ Current Stats (At Start) ⬇️ {}
             💵 Available Bonus Balance: ${}\n
