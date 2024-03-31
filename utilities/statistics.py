@@ -8,10 +8,17 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 
 # Function to get the current affiliate statistics
 def get_affiliate_statistics():
-    browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Enables headless mode
+    chrome_options.add_argument("--disable-gpu")  # Disables GPU hardware acceleration
+    chrome_options.add_argument("--no-sandbox")  # Bypass OS security model
+    chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
+
+    browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options = chrome_options)
     browser.get('https://www.hagobuy.com/login')
 
     username_field = WebDriverWait(browser, 10).until(
