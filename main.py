@@ -16,7 +16,7 @@ def main():
 
     now = datetime.now()
 
-    otification_message = """
+    notification_message = """
     ⬇️ Current Stats (At Start) ⬇️ {}
     💵 Available Bonus Balance: ${}\n
     💸 Unsettled Amount: ${}\n
