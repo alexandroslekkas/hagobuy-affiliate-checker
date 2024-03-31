@@ -1,3 +1,5 @@
+from utilities.strings import get_clean_number
+
 import os
 import time
 from selenium import webdriver
@@ -15,11 +17,11 @@ def get_affiliate_statistics():
     username_field = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.NAME, 'username'))
     )
-    username_field.send_keys(os.environ['ACCOUNT_EMAIL'])
+    username_field.send_keys(os.environ['HAGOBUY_ACCOUNT_EMAIL'])
     password_field = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.NAME, 'password'))
     )
-    password_field.send_keys(os.environ['ACCOUNT_PASSWORD'])
+    password_field.send_keys(os.environ['HAGOBUY_ACCOUNT_PASSWORD'])
 
     login_button_container = WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.CLASS_NAME, 'ant-spin-container'))
@@ -30,3 +32,25 @@ def get_affiliate_statistics():
     time.sleep(2.5)
     
     browser.get('https://www.hagobuy.com/center/affiliates')
+
+    time.sleep(4.5)
+
+    wait = WebDriverWait(browser, 10)
+
+    available_bonus_balance = get_clean_number(wait.until(EC.presence_of_element_located(
+        (By.XPATH, "//div[contains(text(), 'Available bonus balance')]/following-sibling::div")
+    )).text)
+    unsettled_amount = get_clean_number(wait.until(EC.presence_of_element_located(
+        (By.XPATH, "//div[contains(text(), 'Unsettled amount')]/following-sibling::div")
+    )).text)
+    bonus_earned = get_clean_number(wait.until(EC.presence_of_element_located(
+        (By.XPATH, "//div[contains(text(), 'Bonus earned')]/following-sibling::div")
+    )).text)
+    number_of_invited = get_clean_number(wait.until(EC.presence_of_element_located(
+        (By.XPATH, "//div[contains(text(), 'Number of invited')]/following-sibling::div")
+    )).text)
+    recommended_order = get_clean_number(wait.until(EC.presence_of_element_located(
+        (By.XPATH, "//div[contains(text(), 'Recommended order')]/following-sibling::div")
+    )).text)
+
+    return available_bonus_balance, unsettled_amount, bonus_earned, number_of_invited, recommended_order
