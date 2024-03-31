@@ -1,4 +1,3 @@
-```
 # 🌟 HagoBuy Affiliate Statistics Tracker 🌟
 
 Automates logging into HagoBuy, navigating to the affiliate center, and extracting key statistics. Built with Selenium, it operates in headless mode for seamless automation.
@@ -62,4 +61,3 @@ Contributions are welcome! Feel free to check the [issues page](https://your-rep
 ## 📝 License
 
 This project is licensed under the MIT License - see the `LICENSE` file for details.
-```
