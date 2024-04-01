@@ -53,11 +53,3 @@ python main.py
 ```
 
 The script logs into HagoBuy, navigates to the affiliate center, extracts statistics, and sends them via Telegram.
-
-## 🤝 Contributing
-
-Contributions are welcome!
-
-## 📝 License
-
-This project is licensed under the MIT License - see the `LICENSE` file for details.
