@@ -17,25 +17,13 @@ def store_statistics(stats):
     with open(filename, "w") as file:
         json.dump(data, file)
 
-def calculate_totals_for_period(start_date, end_date):
-    filename = "statistics_data.json"
-    try:
-        with open(filename, "r") as file:
-            data = json.load(file)
-    except FileNotFoundError:
-        print("Statistics file not found.")
-        return
-
-    total_money = sum(item['total_amount'] for item in data if start_date <= datetime.strptime(item['timestamp'], "%Y-%m-%d %H:%M:%S") <= end_date)
-    return total_money
-
 def get_previous_statistics():
     filename = "statistics_data.json"
     try:
         with open(filename, "r") as file:
             data = json.load(file)
-            if data:
-                return data[-1]  # Return the last recorded stats
+            if data and len(data) > 1:
+                return data[-2]  # Return the second last recorded stats to compare with the last one
     except FileNotFoundError:
         pass
     return None
@@ -53,32 +41,28 @@ async def main():
         now = datetime.now()
         previous_stats = get_previous_statistics()
 
-        available_bonus_balance, unsettled_amount, bonus_earned, number_of_invited, recommended_order = get_affiliate_statistics()
-        total_amount = available_bonus_balance + unsettled_amount
+        current_stats = get_affiliate_statistics()
+        total_amount = current_stats[0] + current_stats[1]  # Assuming these are available_bonus_balance and unsettled_amount
 
         stats = {
             "timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),
-            "available_bonus_balance": available_bonus_balance,
-            "unsettled_amount": unsettled_amount,
+            "available_bonus_balance": current_stats[0],
+            "unsettled_amount": current_stats[1],
             "total_amount": total_amount,
-            "bonus_earned": bonus_earned,
-            "number_of_invited": number_of_invited,
-            "recommended_order": recommended_order
+            "bonus_earned": current_stats[2],
+            "number_of_invited": current_stats[3],
+            "recommended_order": current_stats[4]
         }
         store_statistics(stats)
 
+        # Prepare the differences for notification
         if previous_stats:
-            diff = {key: stats[key] - previous_stats.get(key, 0) for key in stats if key not in ['timestamp', 'recommended_order']}
-            diff_message = "\n".join(f"{key}: ${stats[key]} (${diff[key]})" for key in diff)
-            recommended_order_diff = stats['recommended_order'] - previous_stats.get('recommended_order', 0)
+            diffs = {key: stats[key] - previous_stats.get(key, 0) for key in stats if key not in ['timestamp']}
+            diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: ${stats[key]} (${'+{:.2f}'.format(diffs[key]) if diffs[key] >= 0 else '{:.2f}'.format(diffs[key])})" for key in diffs)
         else:
-            diff_message = "\n".join(f"{key}: ${stats[key]}" for key in stats if key not in ['timestamp', 'recommended_order'])
-            recommended_order_diff = stats['recommended_order']
+            diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: ${stats[key]}" for key in stats if key not in ['timestamp'])
 
-        notification_message = f"""
-        ⬇️ Stats for {now.strftime('%Y-%m-%d %H:%M')} ⬇️\n{diff_message}\n
-        📈 Recommended Order: {stats['recommended_order']} ({recommended_order_diff})
-        """
+        notification_message = f"⬇️ Stats for {now.strftime('%Y-%m-%d %H:%M')} ⬇️\n{diffs_message}"
         await send_notification(notification_message)
 
         # Wait until the next hour to run again
