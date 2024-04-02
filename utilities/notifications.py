@@ -1,3 +1,4 @@
+import asyncio
 import os
 from telegram import Bot
 
@@ -8,4 +9,6 @@ async def send_notification(message):
 
     bot = Bot(token=bot_token)
     
-    await bot.send_message(chat_id=bot_chat_id, text=message)
+    # Run the synchronous code in the event loop's executor
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, bot.send_message, bot_chat_id, message)
