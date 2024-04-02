@@ -1,6 +1,9 @@
 import asyncio
 from datetime import datetime, timedelta
 import json
+from telegram import Update, Bot
+from telegram.ext import Updater, CommandHandler, CallbackContext, Application, MessageHandler, filters
+import os
 
 from utilities.notifications import send_notification
 from utilities.statistics import get_affiliate_statistics
@@ -34,7 +37,51 @@ async def wait_until_next_hour():
     wait_seconds = (next_hour - now).total_seconds()
     await asyncio.sleep(wait_seconds)
 
-async def main():
+async def daily_stats(update: Update, context: CallbackContext) -> None:
+    # This function is now an async function
+    daily_statistics = calculate_daily_stats()
+    await update.message.reply_text(daily_statistics)
+
+def calculate_daily_stats():
+    # Load your statistics data
+    filename = "statistics_data.json"
+    try:
+        with open(filename, "r") as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        return "Statistics file not found."
+
+    if not data:
+        return "No data available for today."
+    
+    # Assuming data is stored with timestamps, find the first and last entry for today
+    today = datetime.now().date()
+    today_stats = [stat for stat in data if datetime.strptime(stat['timestamp'], "%Y-%m-%d %H:%M:%S").date() == today]
+    if not today_stats:
+        return "No statistics available for today."
+    
+    first_stat = today_stats[0]
+    last_stat = today_stats[-1]
+
+    # Calculate differences
+    diffs = {key: last_stat[key] - first_stat.get(key, 0) for key in last_stat if key not in ['timestamp', 'recommended_order']}
+    diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: {last_stat[key]} ({'+{}'.format(diffs[key]) if diffs[key] >= 0 else '{}'.format(diffs[key])})" for key in diffs)
+
+    return f"Daily Statistics:\n{diffs_message}"
+
+async def bot_loop():
+    """Runs the bot using asyncio."""
+    application = Application.builder().token(os.environ['TELEGRAM_BOT_TOKEN']).build()
+
+    # Add command handler for daily statistics
+    application.add_handler(CommandHandler("daily_stats", daily_stats))
+
+    # Start the bot
+    await application.initialize()
+    await application.start()
+    await application.idle()
+
+async def statistics_loop():
     await send_notification("🟢 App online")
 
     while True:
@@ -78,6 +125,13 @@ async def main():
         # Wait until the next hour to run again
         await wait_until_next_hour()
 
+
+async def main():
+    # Run both the bot loop and the statistics loop concurrently
+    await asyncio.gather(
+        bot_loop(),
+        statistics_loop(),
+    )
+
 if __name__ == '__main__':
-    print("[>] Starting application")
     asyncio.run(main())
