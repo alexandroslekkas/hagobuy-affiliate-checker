@@ -1,2 +1,5 @@
+# Secrets
 .env
+
+# Program generated data
 statistics_data.json
