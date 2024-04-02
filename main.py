@@ -55,12 +55,22 @@ async def main():
         }
         store_statistics(stats)
 
+        # Define which stats are monetary for appropriate formatting
+        monetary_stats = ["available_bonus_balance", "unsettled_amount", "total_amount", "bonus_earned"]
+        
         # Prepare the differences for notification
         if previous_stats:
             diffs = {key: stats[key] - previous_stats.get(key, 0) for key in stats if key not in ['timestamp']}
-            diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: ${stats[key]} (${'+{:.2f}'.format(diffs[key]) if diffs[key] >= 0 else '{:.2f}'.format(diffs[key])})" for key in diffs)
+            diffs_message = []
+            for key in diffs:
+                if key in monetary_stats:
+                    value_format = f"{key.replace('_', ' ').title()}: ${stats[key]} (${'+{:.2f}'.format(diffs[key]) if diffs[key] >= 0 else '{:.2f}'.format(diffs[key])})"
+                else:
+                    value_format = f"{key.replace('_', ' ').title()}: {stats[key]} ({'+{}'.format(diffs[key]) if diffs[key] >= 0 else '{}'.format(diffs[key])})"
+                diffs_message.append(value_format)
+            diffs_message = "\n".join(diffs_message)
         else:
-            diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: ${stats[key]}" for key in stats if key not in ['timestamp'])
+            diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: ${stats[key]}" if key in monetary_stats else f"{key.replace('_', ' ').title()}: {stats[key]}" for key in stats if key not in ['timestamp'])
 
         notification_message = f"⬇️ Stats for {now.strftime('%Y-%m-%d %H:%M')} ⬇️\n{diffs_message}"
         await send_notification(notification_message)
