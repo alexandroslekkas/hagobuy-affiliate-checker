@@ -1,7 +1,7 @@
 from telegram import Bot
 import os
 
-async def send_notification(message):
+async def send_message(message):
     bot_token = os.environ['TELEGRAM_BOT_TOKEN']
     bot_chat_id = os.environ['TELEGRAM_CHAT_ID']
     bot = Bot(token=bot_token)

@@ -1,11 +1,9 @@
-import asyncio
 from datetime import datetime, timedelta
 import json
+import time
 
-import telebot
-
-from utilities.notifications import send_notification
-from utilities.statistics import get_affiliate_statistics
+from bot.functions.send_message import send_message
+from services.statistics.functions.get_affiliate_statistics import get_affiliate_statistics
 
 def store_statistics(stats):
     filename = "statistics_data.json"
@@ -30,16 +28,11 @@ def get_previous_statistics():
         pass
     return None
 
-async def wait_until_next_hour():
+def wait_until_next_hour():
     now = datetime.now()
     next_hour = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     wait_seconds = (next_hour - now).total_seconds()
-    await asyncio.sleep(wait_seconds)
-
-async def daily_stats(update: Update, context: CallbackContext) -> None:
-    # This function is now an async function
-    daily_statistics = calculate_daily_stats()
-    await update.message.reply_text(daily_statistics)
+    time.sleep(wait_seconds)
 
 def calculate_daily_stats():
     # Load your statistics data
@@ -68,21 +61,8 @@ def calculate_daily_stats():
 
     return f"Daily Statistics:\n{diffs_message}"
 
-def bot_loop():
-    application = Application.builder().token(os.environ['TELEGRAM_BOT_TOKEN']).build()
-
-    # Add command handler for daily statistics
-    application.add_handler(CommandHandler("daily_stats", daily_stats))
-
-    # Start the bot
-    application.initialize()
-    application.start()
-    application.run_polling()
-    
-    statistics_loop()
-
-async def statistics_loop():
-    await send_notification("🟢 App online")
+def statistics_loop():
+    send_message("🟢 App online")
 
     while True:
         now = datetime.now()
@@ -120,15 +100,17 @@ async def statistics_loop():
             diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: ${stats[key]}" if key in monetary_stats else f"{key.replace('_', ' ').title()}: {stats[key]}" for key in stats if key not in ['timestamp'])
 
         notification_message = f"⬇️ Stats for {now.strftime('%Y-%m-%d %H:%M')} ⬇️\n{diffs_message}"
-        await send_notification(notification_message)
+        send_message(notification_message)
 
         # Wait until the next hour to run again
-        await wait_until_next_hour()
+        wait_until_next_hour()
 
 
-async def main():
-    await bot_loop()
+def statistics():
+    statistics_loop()
+
+def main():
+    statistics()
 
 if __name__ == '__main__':
-    
-    asyncio.run(main())
+    main()
