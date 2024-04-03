@@ -1,10 +1,9 @@
-from telegram import Bot
+import telebot
 import os
 
-async def send_message(message):
-    bot_token = os.environ['TELEGRAM_BOT_TOKEN']
-    bot_chat_id = os.environ['TELEGRAM_CHAT_ID']
-    bot = Bot(token=bot_token)
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+telegram_bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 
-    # If send_message is async, await it directly
-    await bot.send_message(chat_id=bot_chat_id, text=message)
+def send_message(message):
+    bot_chat_id = os.environ['TELEGRAM_CHAT_ID']
+    telegram_bot.send_message(chat_id=bot_chat_id, text=message)

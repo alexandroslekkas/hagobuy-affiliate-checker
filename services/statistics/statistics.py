@@ -34,6 +34,9 @@ def wait_until_next_hour():
     wait_seconds = (next_hour - now).total_seconds()
     time.sleep(wait_seconds)
 
+from datetime import datetime, timedelta
+import json
+
 def calculate_daily_stats():
     # Load your statistics data
     filename = "statistics_data.json"
@@ -46,19 +49,39 @@ def calculate_daily_stats():
     if not data:
         return "No data available for today."
     
-    # Assuming data is stored with timestamps, find the first and last entry for today
+    # Get today's date
     today = datetime.now().date()
+    
+    # Find the stats for today
     today_stats = [stat for stat in data if datetime.strptime(stat['timestamp'], "%Y-%m-%d %H:%M:%S").date() == today]
     if not today_stats:
         return "No statistics available for today."
-    
-    first_stat = today_stats[0]
+
+    # Get the most recent stats for today
     last_stat = today_stats[-1]
-
+    
+    # Find the stats for yesterday
+    yesterday = today - timedelta(days=1)
+    yesterday_stats = None
+    for stat in data:
+        timestamp = datetime.strptime(stat['timestamp'], "%Y-%m-%d %H:%M:%S").date()
+        if timestamp == yesterday:
+            yesterday_stats = stat
+            break
+    
+    if not yesterday_stats:
+        return "No statistics available for yesterday."
+    
     # Calculate differences
-    diffs = {key: last_stat[key] - first_stat.get(key, 0) for key in last_stat if key not in ['timestamp', 'recommended_order']}
-    diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: {last_stat[key]} ({'+{}'.format(diffs[key]) if diffs[key] >= 0 else '{}'.format(diffs[key])})" for key in diffs)
+    diffs = {}
+    for key, value in yesterday_stats.items():
+        if key != 'timestamp' and key != 'recommended_order':
+            current_value = last_stat.get(key, 0)
+            diff = last_stat[key] - yesterday_stats.get(key, 0)
+            diffs[key] = diff
 
+    # Generate message
+    diffs_message = "\n".join(f"{key.replace('_', ' ').title()}: {last_stat[key]} ({'+' if diffs[key] >= 0 else ''}{diffs[key]})" for key in diffs)
     return f"Daily Statistics:\n{diffs_message}"
 
 def statistics_loop():
