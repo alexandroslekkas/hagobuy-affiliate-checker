@@ -38,6 +38,9 @@ from datetime import datetime, timedelta
 import json
 
 def calculate_daily_stats():
+    import json
+    from datetime import datetime, timedelta
+
     # Load your statistics data
     filename = "statistics_data.json"
     try:
@@ -68,6 +71,10 @@ def calculate_daily_stats():
         if timestamp == yesterday:
             yesterday_stats = stat
             break
+    
+    # If there are no stats for yesterday, use the earliest stats of today
+    if not yesterday_stats and today_stats:
+        yesterday_stats = today_stats[0]
     
     if not yesterday_stats:
         return "No statistics available for yesterday."
